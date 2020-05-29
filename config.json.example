@@ -1,0 +1,17 @@
+{
+  "chainquery": {
+    "host": "chainquery.lbry.com",
+    "user": "user",
+    "database": "chainquery",
+    "password": "password"
+  },
+  "speech": {
+    "host": "localhost",
+    "user": "lbry",
+    "database": "lbry",
+    "password": "password"
+  },
+  "channel_id": "",
+  "publish_address": "",
+  "reflector_server": "reflector.lbry.com:5567"
+}
