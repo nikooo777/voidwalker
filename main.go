@@ -332,8 +332,8 @@ func publish(c *gin.Context) {
 		}
 		tx, err := daemon.StreamCreate(checkSum[:16], filePath, 0.001, jsonrpc.StreamCreateOptions{
 			ClaimCreateOptions: jsonrpc.ClaimCreateOptions{
-				Title:        util.PtrToString(claimName),
-				ClaimAddress: util.PtrToString(publishAddress),
+				Title: util.PtrToString(claimName),
+				//ClaimAddress: util.PtrToString(publishAddress),
 			},
 			Author:    util.PtrToString("voidwalker thumbnails"),
 			ChannelID: util.PtrToString(channelID),
