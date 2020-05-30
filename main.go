@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"os"
 	"os/user"
@@ -93,31 +94,7 @@ func view(c *gin.Context) {
 	channelShortID := ""
 	var claim *chainquery.Claim
 	var err error
-	if strings.Contains(id, "@") {
-		parts := strings.Split(id, ":")
-		channelName = parts[0]
-		if len(parts) > 1 {
-			channelShortID = parts[1]
-		}
-
-		claim, err = cqApi.ResolveClaimByChannel(claimName, channelShortID, channelName)
-	} else {
-		claim, err = cqApi.ResolveClaim(claimName, id)
-	}
-	if err != nil {
-		if errors.Is(err, chainquery.ClaimNotFoundErr) {
-			_ = c.AbortWithError(http.StatusNotFound, err)
-		} else {
-			logrus.Errorln(errors.FullTrace(err))
-			_ = c.AbortWithError(http.StatusInternalServerError, err)
-		}
-		return
-	}
-	if !strings.Contains(claim.ContentType, "image/") {
-		c.Redirect(301, fmt.Sprintf("https://cdn.lbryplayer.xyz/content/claims/%s/%s/stream", claimName, id))
-		return
-	}
-
+	contentType := mime.TypeByExtension(filepath.Ext(claimNameWithExt))
 	inUploads, err := isFileInDir(uploadsDir, claimNameWithExt)
 	if err != nil {
 		logrus.Errorln(errors.FullTrace(err))
@@ -134,6 +111,33 @@ func view(c *gin.Context) {
 		}
 	}
 	mustDownload := !inUploads && !inDownloads
+	if mustDownload {
+		if strings.Contains(id, "@") {
+			parts := strings.Split(id, ":")
+			channelName = parts[0]
+			if len(parts) > 1 {
+				channelShortID = parts[1]
+			}
+			claim, err = cqApi.ResolveClaimByChannel(claimName, channelShortID, channelName)
+		} else {
+			claim, err = cqApi.ResolveClaim(claimName, id)
+		}
+		if err != nil {
+			if errors.Is(err, chainquery.ClaimNotFoundErr) {
+				_ = c.AbortWithError(http.StatusNotFound, err)
+			} else {
+				logrus.Errorln(errors.FullTrace(err))
+				_ = c.AbortWithError(http.StatusInternalServerError, err)
+			}
+			return
+		}
+		if !strings.Contains(claim.ContentType, "image/") {
+			c.Redirect(301, fmt.Sprintf("https://cdn.lbryplayer.xyz/content/claims/%s/%s/stream", claimName, id))
+			return
+		}
+		contentType = claim.ContentType
+	}
+
 	if mustDownload {
 		err = downloadStream(claim.SdHash, claimNameWithExt)
 		if err != nil {
@@ -166,7 +170,7 @@ func view(c *gin.Context) {
 		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
 		return
 	}
-	c.DataFromReader(http.StatusOK, f.Size(), claim.ContentType, reader, nil)
+	c.DataFromReader(http.StatusOK, f.Size(), contentType, reader, nil)
 	return
 
 }
