@@ -13,5 +13,11 @@
   },
   "channel_id": "",
   "publish_address": "",
-  "reflector_server": "reflector.lbry.com:5567"
+  "reflector_server": "reflector.lbry.com:5567",
+  "lbrynet_timeout": 300,
+  "previous_channel_ids": [
+    "4c971f1076e39845c1643cdcf41d2287e1ea4961",
+    "f2cf43b86b9d70175dc22dbb9ff7806241d90780",
+    "2ad860f494345417824e30eb85f4ce7d1fea9cff"
+  ]
 }

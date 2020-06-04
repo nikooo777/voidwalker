@@ -1,6 +1,8 @@
 package configs
 
 import (
+	"time"
+
 	"github.com/lbryio/lbry.go/v2/extras/errors"
 	"github.com/tkanos/gonfig"
 )
@@ -12,11 +14,13 @@ type DbConfig struct {
 	Password string `json:"password"`
 }
 type Configs struct {
-	Chainquery      DbConfig `json:"chainquery"`
-	Speech          DbConfig `json:"speech"`
-	ChannelID       string   `json:"channel_id"`
-	PublishAddress  string   `json:"publish_address"`
-	ReflectorServer string   `json:"reflector_server"`
+	Chainquery         DbConfig      `json:"chainquery"`
+	Speech             DbConfig      `json:"speech"`
+	ChannelID          string        `json:"channel_id"`
+	PublishAddress     string        `json:"publish_address"`
+	ReflectorServer    string        `json:"reflector_server"`
+	LbrynetTimeout     time.Duration `json:"lbrynet_timeout"`
+	PreviousChannelIds []string      `json:"previous_channel_ids"`
 }
 
 var Configuration *Configs

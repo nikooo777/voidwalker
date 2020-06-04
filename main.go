@@ -20,7 +20,7 @@ import (
 	"voidwalker/blobsdownloader"
 	"voidwalker/chainquery"
 	"voidwalker/configs"
-	ml "voidwalker/util"
+	ml2 "voidwalker/util/ml"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-contrib/cors"
@@ -38,8 +38,8 @@ var cqApi *chainquery.CQApi
 var downloadsDir string
 var uploadsDir string
 var blobsDir string
-var viewLock ml.MultipleLock
-var publishLock ml.MultipleLock
+var viewLock ml2.MultipleLock
+var publishLock ml2.MultipleLock
 
 func main() {
 	err := configs.Init("./config.json")
@@ -63,8 +63,8 @@ func main() {
 	uploadsDir = usr.HomeDir + "/Uploads/"
 	downloadsDir = usr.HomeDir + "/Downloads/"
 	blobsDir = usr.HomeDir + "/.lbrynet/blobfiles/"
-	viewLock = ml.NewMultipleLock()
-	publishLock = ml.NewMultipleLock()
+	viewLock = ml2.NewMultipleLock()
+	publishLock = ml2.NewMultipleLock()
 
 	cache = &sync.Map{}
 
@@ -297,7 +297,7 @@ func publish(c *gin.Context) {
 			return
 		}
 		for _, claim := range *resolveRsp {
-			if claim.SigningChannel != nil && claim.SigningChannel.ClaimID == channelID {
+			if claim.SigningChannel != nil && util.InSlice(claim.SigningChannel.ClaimID, configs.Configuration.PreviousChannelIds) {
 				baseUrl := "https://spee.ch/" + claim.ClaimID[0:1] + "/" + checkSum[:16]
 				extendedUrl := baseUrl + mimeType.Extension()
 				response := PublishResponse{
@@ -420,5 +420,5 @@ type ClaimData struct {
 
 func initLbrynet() {
 	daemon = jsonrpc.NewClient("")
-	daemon.SetRPCTimeout(1 * time.Minute)
+	daemon.SetRPCTimeout(configs.Configuration.LbrynetTimeout * time.Minute)
 }
