@@ -16,6 +16,7 @@ type DbConfig struct {
 type Configs struct {
 	Chainquery         DbConfig      `json:"chainquery"`
 	Speech             DbConfig      `json:"speech"`
+	Voidwalker         DbConfig      `json:"voidwalker"`
 	ChannelID          string        `json:"channel_id"`
 	PublishAddress     string        `json:"publish_address"`
 	ReflectorServer    string        `json:"reflector_server"`

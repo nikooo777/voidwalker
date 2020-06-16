@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -19,7 +21,10 @@ import (
 
 	"voidwalker/blobsdownloader"
 	"voidwalker/chainquery"
+	"voidwalker/compression"
 	"voidwalker/configs"
+	"voidwalker/db"
+	"voidwalker/model"
 	ml2 "voidwalker/util/ml"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -30,22 +35,34 @@ import (
 	"github.com/lbryio/lbry.go/v2/extras/util"
 	"github.com/lbryio/lbry.go/v2/stream"
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/null"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 var publishAddress string
 var channelID string
 var cqApi *chainquery.CQApi
 var downloadsDir string
+var compressedDir string
 var uploadsDir string
 var blobsDir string
 var viewLock ml2.MultipleLock
 var publishLock ml2.MultipleLock
 
+//go:generate go-bindata -nometadata -o migration/bindata.go -pkg migration -ignore bindata.go migration/
+//go:generate go fmt ./migration/bindata.go
+//go:generate goimports -l ./migration/bindata.go
 func main() {
 	err := configs.Init("./config.json")
 	if err != nil {
 		panic(err)
 	}
+	//Main DB connection
+	dbInstance, err := db.Init(true)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer db.CloseDB(dbInstance)
 	publishAddress = configs.Configuration.PublishAddress
 	channelID = configs.Configuration.ChannelID
 	if publishAddress == "" || channelID == "" {
@@ -62,6 +79,7 @@ func main() {
 	}
 	uploadsDir = usr.HomeDir + "/Uploads/"
 	downloadsDir = usr.HomeDir + "/Downloads/"
+	compressedDir = usr.HomeDir + "/Compressed/"
 	blobsDir = usr.HomeDir + "/.lbrynet/blobfiles/"
 	viewLock = ml2.NewMultipleLock()
 	publishLock = ml2.NewMultipleLock()
@@ -111,7 +129,12 @@ func view(c *gin.Context) {
 		}
 	}
 	mustDownload := !inUploads && !inDownloads
-	if mustDownload {
+	t, err := model.Thumbnails(model.ThumbnailWhere.Name.EQ(claimNameWithExt)).OneG()
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
+		return
+	}
+	if mustDownload && (t == nil || !t.Compressed) {
 		if strings.Contains(id, "@") {
 			parts := strings.Split(id, ":")
 			channelName = parts[0]
@@ -136,9 +159,6 @@ func view(c *gin.Context) {
 			return
 		}
 		contentType = claim.ContentType
-	}
-
-	if mustDownload {
 		err = downloadStream(claim.SdHash, claimNameWithExt)
 		if err != nil {
 			logrus.Errorln(errors.FullTrace(err))
@@ -148,20 +168,49 @@ func view(c *gin.Context) {
 	}
 
 	var reader *os.File
+	thumbnailPath := ""
 	if mustDownload || inDownloads {
-		reader, err = os.Open(downloadsDir + claimNameWithExt)
-		if err != nil {
-			logrus.Errorln(errors.FullTrace(err))
-			_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
-			return
-		}
+		thumbnailPath = downloadsDir + claimNameWithExt
 	} else {
-		reader, err = os.Open(uploadsDir + claimNameWithExt)
-		if err != nil {
-			logrus.Errorln(errors.FullTrace(err))
-			_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
-			return
-		}
+		thumbnailPath = uploadsDir + claimNameWithExt //fallback
+	}
+	if t == nil || !t.Compressed {
+		go func() {
+			cp, mt, err := compression.Compress(thumbnailPath, claimName, contentType, compressedDir)
+			if err != nil {
+				if !errors.Is(err, compression.AlreadyInUseErr) && !errors.Is(err, compression.UnsupportedErr) {
+					logrus.Errorln(errors.FullTrace(err))
+				} else {
+					logrus.Infoln(err.Error())
+				}
+			} else {
+				if t == nil {
+					t = &model.Thumbnail{
+						Name: claimNameWithExt,
+					}
+				}
+				t.Compressed = true
+				t.CompressedMimeType = null.StringFrom(mt)
+				t.CompressedName = null.StringFrom(cp)
+				err = t.UpsertG(boil.Infer(), boil.Infer())
+				if err != nil {
+					logrus.Errorln(errors.FullTrace(err))
+					_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
+					return
+				}
+				thumbnailPath = filepath.Join(compressedDir, cp)
+				contentType = mt
+			}
+		}()
+	} else {
+		thumbnailPath = filepath.Join(compressedDir, t.CompressedName.String)
+		contentType = t.CompressedMimeType.String
+	}
+	reader, err = os.Open(thumbnailPath)
+	if err != nil {
+		logrus.Errorln(errors.FullTrace(err))
+		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
+		return
 	}
 	defer reader.Close()
 	f, err := reader.Stat()

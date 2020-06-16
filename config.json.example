@@ -11,6 +11,12 @@
     "database": "lbry",
     "password": "password"
   },
+  "voidwalker": {
+    "host": "localhost",
+    "user": "voidwalker",
+    "database": "voidwalker",
+    "password": "voidwalker"
+  },
   "channel_id": "",
   "publish_address": "",
   "reflector_server": "reflector.lbry.com:5567",
