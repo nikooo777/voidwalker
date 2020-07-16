@@ -3,7 +3,6 @@ package compression
 import (
 	"io/ioutil"
 	"mime"
-	"os"
 	"path/filepath"
 
 	"github.com/lbryio/lbry.go/v2/extras/errors"
@@ -30,8 +29,12 @@ func Compress(path, fileName, mimeType, storePath string) (string, string, error
 	case "image/gif":
 		converter := giftowebp.NewConverter()
 		converter.LoopCompatibility = false
-		converter.WebPConfig.SetTargetSize(500 * 1024)
-		converter.WebPConfig.SetMethod(2)
+		if len(file) > 500*1024 {
+			converter.WebPConfig.SetTargetSize(500 * 1024)
+		} else {
+			converter.WebPConfig.SetTargetSize(len(file))
+		}
+		converter.WebPConfig.SetMethod(4)
 		webpBin, err := converter.Convert(file)
 		if err != nil {
 			return "", "", errors.Err(err)
@@ -41,8 +44,8 @@ func Compress(path, fileName, mimeType, storePath string) (string, string, error
 		if err != nil {
 			return "", "", errors.Err(err)
 		}
-		err = os.Remove(path)
-		return fileName + ".webp", mime.TypeByExtension(".webp"), errors.Err(err)
+		//err = os.Remove(path)
+		return fileName + ".webp", mime.TypeByExtension(".webp"), nil
 	case mime.TypeByExtension("png"):
 	case mime.TypeByExtension("jpeg"):
 	case mime.TypeByExtension("jpg"):
