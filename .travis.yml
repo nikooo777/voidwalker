@@ -1,0 +1,27 @@
+os: linux
+dist: bionic
+language: go
+go:
+  - 1.14.4
+
+install: true
+
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
+services:
+  - docker
+
+script:
+  - make
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: ./scripts/deploy.sh
+  file: bin/voidwalker
+  on:
+    repo: lbryio/voidwalker
+    tags: true
