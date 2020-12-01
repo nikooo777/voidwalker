@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -91,7 +93,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 	r.POST("/api/claim/publish", publish)
-	r.GET("/view/:id/:claimname", view)
+	r.GET("/*url", view)
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.Run(":5000")
 }
@@ -99,6 +101,39 @@ func main() {
 var daemon *jsonrpc.Client
 
 func view(c *gin.Context) {
+	url := c.Param("url")
+	if url == "favicon.ico" {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	r := regexp.MustCompile(`^/(@(?P<channel>[^/]+?)/)?(?P<name>.+)\.(?P<ext>.+?)$`)
+
+	match := r.FindStringSubmatch(url)
+	if match == nil {
+		_ = c.AbortWithError(http.StatusNotFound, fmt.Errorf("invalid url format"))
+		return
+	}
+
+	result := make(map[string]string)
+	for i, name := range r.SubexpNames() {
+		if i > 1 && name != "" {
+			result[name] = match[i]
+		}
+	}
+
+	u := ""
+	if result["channel"] != "" {
+		u += "@" + result["channel"] + "/"
+	}
+	u += result["name"]
+
+	newURL := fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s", base64.URLEncoding.EncodeToString([]byte(u)))
+	c.Redirect(302, newURL)
+	return
+}
+
+func viewOld(c *gin.Context) {
 	id := c.Param("id")
 	claimNameWithExt := c.Param("claimname")
 	claimName := strings.TrimSuffix(claimNameWithExt, filepath.Ext(claimNameWithExt))
@@ -221,7 +256,6 @@ func view(c *gin.Context) {
 	}
 	c.DataFromReader(http.StatusOK, f.Size(), contentType, reader, nil)
 	return
-
 }
 
 func isFileInDir(directory, fileName string) (bool, error) {
