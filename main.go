@@ -91,7 +91,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 	r.POST("/api/claim/publish", publish)
-	r.GET("/view/:id/:claimname", view)
+	r.GET("/*url", view)
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.Run(":5000")
 }
@@ -99,6 +99,23 @@ func main() {
 var daemon *jsonrpc.Client
 
 func view(c *gin.Context) {
+	url := c.Param("url")
+	if url == "favicon.ico" {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	url = strings.TrimLeft(url, "/")
+	if url == "" {
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid url: %s", c.Param("url")))
+		return
+	}
+
+	c.Redirect(302, "https://cdn.lbryplayer.xyz/speech/"+url)
+	return
+}
+
+func viewOld(c *gin.Context) {
 	id := c.Param("id")
 	claimNameWithExt := c.Param("claimname")
 	claimName := strings.TrimSuffix(claimNameWithExt, filepath.Ext(claimNameWithExt))
@@ -221,7 +238,6 @@ func view(c *gin.Context) {
 	}
 	c.DataFromReader(http.StatusOK, f.Size(), contentType, reader, nil)
 	return
-
 }
 
 func isFileInDir(directory, fileName string) (bool, error) {
