@@ -9,7 +9,7 @@ VERSION = $(shell git --git-dir=${DIR}/.git describe --dirty --always --long --a
 LDFLAGS = -ldflags "-X ${IMPORT_PATH}/meta.Version=${VERSION} -X ${IMPORT_PATH}/meta.Time=$(shell date +%s) -w"
 
 
-.PHONY: build clean test lint
+.PHONY: build clean test lint dev
 .DEFAULT_GOAL: build
 
 
@@ -24,3 +24,6 @@ test:
 
 lint:
 	go get github.com/alecthomas/gometalinter && gometalinter --install && gometalinter ./...
+
+dev:
+	reflex --decoration=none --start-service=true --regex='main.go' go run .
