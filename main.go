@@ -107,6 +107,15 @@ func view(c *gin.Context) {
 	}
 
 	url = strings.TrimLeft(url, "/")
+	extStart := strings.LastIndex(url, ".")
+	if extStart >= 0 {
+		url = url[:extStart]
+	}
+
+	if url == "" {
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid url: %s", c.Param("url")))
+		return
+	}
 
 	newURL := fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s", base64.URLEncoding.EncodeToString([]byte(url)))
 	c.Redirect(302, newURL)
