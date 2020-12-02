@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -108,6 +109,11 @@ func view(c *gin.Context) {
 	url = strings.TrimLeft(url, "/")
 	if url == "" {
 		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid url: %s", c.Param("url")))
+		return
+	}
+
+	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
+		c.Redirect(302, fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s:%s.%s", parts[3], parts[2], parts[4]))
 		return
 	}
 
