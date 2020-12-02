@@ -16,7 +16,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -107,28 +106,9 @@ func view(c *gin.Context) {
 		return
 	}
 
-	r := regexp.MustCompile(`^/(@(?P<channel>[^/]+?)/)?(?P<name>.+)\.(?P<ext>.+?)$`)
+	url = strings.TrimLeft(url, "/")
 
-	match := r.FindStringSubmatch(url)
-	if match == nil {
-		_ = c.AbortWithError(http.StatusNotFound, fmt.Errorf("invalid url format"))
-		return
-	}
-
-	result := make(map[string]string)
-	for i, name := range r.SubexpNames() {
-		if i > 1 && name != "" {
-			result[name] = match[i]
-		}
-	}
-
-	u := ""
-	if result["channel"] != "" {
-		u += "@" + result["channel"] + "/"
-	}
-	u += result["name"]
-
-	newURL := fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s", base64.URLEncoding.EncodeToString([]byte(u)))
+	newURL := fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s", base64.URLEncoding.EncodeToString([]byte(url)))
 	c.Redirect(302, newURL)
 	return
 }
