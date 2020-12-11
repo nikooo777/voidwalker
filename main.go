@@ -105,6 +105,8 @@ func view(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+	height := c.Query("height")
+	width := c.Query("width")
 
 	url = strings.TrimLeft(url, "/")
 	if url == "" {
@@ -112,12 +114,18 @@ func view(c *gin.Context) {
 		return
 	}
 
+	resizeParams := ""
+	redirectBaseURL := "https://lbry2.vanwanet.com/speech/"
+	if height != "" && width != "" {
+		redirectBaseURL = "https://image-optimizer.vanwanet.com/?address=https://cdn.lbryplayer.xyz/speech/"
+		resizeParams = fmt.Sprintf("&height=%s&width=%s", height, width)
+	}
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
-		c.Redirect(302, fmt.Sprintf("https://cdn.lbryplayer.xyz/speech/%s:%s.%s", parts[3], parts[2], parts[4]))
+		c.Redirect(302, fmt.Sprintf("%s%s:%s.%s%s", redirectBaseURL, parts[3], parts[2], parts[4], resizeParams))
 		return
 	}
 
-	c.Redirect(302, "https://cdn.lbryplayer.xyz/speech/"+url)
+	c.Redirect(302, redirectBaseURL+url+resizeParams)
 	return
 }
 
