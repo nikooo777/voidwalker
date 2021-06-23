@@ -121,11 +121,11 @@ func view(c *gin.Context) {
 		resizeParams = fmt.Sprintf("&height=%s&width=%s", height, width)
 	}
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
-		c.Redirect(302, fmt.Sprintf("%s%s:%s.%s%s", redirectBaseURL, parts[3], parts[2], parts[4], resizeParams))
+		c.Redirect(301, fmt.Sprintf("%s%s:%s.%s%s", redirectBaseURL, parts[3], parts[2], parts[4], resizeParams))
 		return
 	}
 
-	c.Redirect(302, redirectBaseURL+url+resizeParams)
+	c.Redirect(301, redirectBaseURL+url+resizeParams)
 	return
 }
 
