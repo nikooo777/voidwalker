@@ -117,9 +117,11 @@ func view(c *gin.Context) {
 	resizeParams := ""
 	redirectBaseURL := "https://lbry2.vanwanet.com/speech/"
 	if height != "" && width != "" {
-		redirectBaseURL = "https://image-optimizer.vanwanet.com/?address=https://cdn.lbryplayer.xyz/speech/"
-		resizeParams = fmt.Sprintf("&height=%s&width=%s", height, width)
+		redirectBaseURL = ""
+		//resizeParams = fmt.Sprintf("&height=%s&width=%s&quality=80", height, width)
+		redirectBaseURL = fmt.Sprintf("https://image-processor.vanwanet.com/optimize/s:%s:%s/quality:80/plain/https://cdn.lbryplayer.xyz/speech/", width, height)
 	}
+	c.Header("Cache-Control", "max-age=604800")
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
 		c.Redirect(301, fmt.Sprintf("%s%s:%s.%s%s", redirectBaseURL, parts[3], parts[2], parts[4], resizeParams))
 		return
