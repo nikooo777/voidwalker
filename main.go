@@ -16,6 +16,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -107,6 +108,7 @@ func view(c *gin.Context) {
 	}
 	height := c.Query("height")
 	width := c.Query("width")
+	quality := c.Query("quality")
 
 	url = strings.TrimLeft(url, "/")
 	if url == "" {
@@ -119,7 +121,14 @@ func view(c *gin.Context) {
 	if height != "" && width != "" {
 		redirectBaseURL = ""
 		//resizeParams = fmt.Sprintf("&height=%s&width=%s&quality=80", height, width)
-		redirectBaseURL = fmt.Sprintf("https://image-processor.vanwanet.com/optimize/s:%s:%s/quality:80/plain/https://cdn.lbryplayer.xyz/speech/", width, height)
+		desiredQuality := 80
+		if quality != "" {
+			q, err := strconv.ParseInt(quality, 10, 32)
+			if err == nil && q < 100 {
+				desiredQuality = int(q)
+			}
+		}
+		redirectBaseURL = fmt.Sprintf("https://image-processor.vanwanet.com/optimize/s:%s:%s/quality:%d/plain/https://cdn.lbryplayer.xyz/speech/", width, height, desiredQuality)
 	}
 	c.Header("Cache-Control", "max-age=604800")
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
