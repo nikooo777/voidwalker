@@ -94,6 +94,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 	r.POST("/api/claim/publish", publish)
 	r.GET("/*url", view)
+	r.HEAD("/*url", view)
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.Run(":5000")
 }
@@ -113,6 +114,10 @@ func view(c *gin.Context) {
 	url = strings.TrimLeft(url, "/")
 	if url == "" {
 		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid url: %s", c.Param("url")))
+		return
+	}
+	if c.Request.Method == http.MethodHead {
+		c.AbortWithStatus(200)
 		return
 	}
 
