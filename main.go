@@ -133,7 +133,7 @@ func view(c *gin.Context) {
 				desiredQuality = int(q)
 			}
 		}
-		redirectBaseURL = fmt.Sprintf("https://thumbnails.odysee.com/optimize/s:%s:%s/quality:%d/plain/https://cdn.lbryplayer.xyz/speech/", width, height, desiredQuality)
+		redirectBaseURL = fmt.Sprintf("https://thumbnails.odycdn.com/optimize/s:%s:%s/quality:%d/plain/https://cdn.lbryplayer.xyz/speech/", width, height, desiredQuality)
 	}
 	c.Header("Cache-Control", "max-age=604800")
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
