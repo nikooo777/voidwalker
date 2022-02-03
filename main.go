@@ -133,7 +133,7 @@ func view(c *gin.Context) {
 				desiredQuality = int(q)
 			}
 		}
-		redirectBaseURL = fmt.Sprintf("https://thumbnails.odycdn.com/optimize/s:%s:%s/quality:%d/plain/https://cdn.lbryplayer.xyz/speech/", width, height, desiredQuality)
+		redirectBaseURL = fmt.Sprintf("https://thumbnails.odycdn.com/optimize/s:%s:%s/quality:%d/plain/https://player.odycdn.com/speech/", width, height, desiredQuality)
 	}
 	c.Header("Cache-Control", "max-age=604800")
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
@@ -202,7 +202,7 @@ func viewOld(c *gin.Context) {
 			return
 		}
 		if !strings.Contains(claim.ContentType, "image/") {
-			c.Redirect(301, fmt.Sprintf("https://cdn.lbryplayer.xyz/content/claims/%s/%s/stream", claimName, id))
+			c.Redirect(301, fmt.Sprintf("https://player.odycdn.com/content/claims/%s/%s/stream", claimName, id))
 			return
 		}
 		contentType = claim.ContentType
