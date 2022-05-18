@@ -122,7 +122,7 @@ func view(c *gin.Context) {
 	}
 
 	resizeParams := ""
-	redirectBaseURL := "https://thumbnails.odycdn.com/optimize/plain/https://player.odycdn.com/speech/"
+	redirectBaseURL := "https://source.thumbnails.odycdn.com/optimize/plain/https://player.odycdn.com/speech/"
 	if height != "" && width != "" {
 		redirectBaseURL = ""
 		//resizeParams = fmt.Sprintf("&height=%s&width=%s&quality=80", height, width)
