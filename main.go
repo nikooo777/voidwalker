@@ -121,11 +121,9 @@ func view(c *gin.Context) {
 		return
 	}
 
-	resizeParams := ""
-	redirectBaseURL := "https://source.thumbnails.odycdn.com/optimize/plain/https://player.odycdn.com/speech/"
+	redirectBaseURL := configs.Configuration.RedirectBaseURL
 	if height != "" && width != "" {
 		redirectBaseURL = ""
-		//resizeParams = fmt.Sprintf("&height=%s&width=%s&quality=80", height, width)
 		desiredQuality := 80
 		if quality != "" {
 			q, err := strconv.ParseInt(quality, 10, 32)
@@ -133,11 +131,11 @@ func view(c *gin.Context) {
 				desiredQuality = int(q)
 			}
 		}
-		redirectBaseURL = fmt.Sprintf("https://source.thumbnails.odycdn.com/optimize/s:%s:%s/quality:%d/plain/https://player.odycdn.com/speech/", width, height, desiredQuality)
+		redirectBaseURL = fmt.Sprintf(configs.Configuration.RedirectAdvancedURL, width, height, desiredQuality)
 	}
 	c.Header("Cache-Control", "max-age=604800")
 	if parts := regexp.MustCompile(`^(view/)?([a-f0-9]+)/(.*?)\.(.*)$`).FindStringSubmatch(url); parts != nil {
-		c.Redirect(301, fmt.Sprintf("%s%s:%s.%s%s", redirectBaseURL, parts[3], parts[2], parts[4], resizeParams))
+		c.Redirect(301, fmt.Sprintf("%s%s:%s.%s", redirectBaseURL, parts[3], parts[2], parts[4]))
 		return
 	}
 

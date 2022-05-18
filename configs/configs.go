@@ -14,14 +14,16 @@ type DbConfig struct {
 	Password string `json:"password"`
 }
 type Configs struct {
-	Chainquery         DbConfig      `json:"chainquery"`
-	Speech             DbConfig      `json:"speech"`
-	Voidwalker         DbConfig      `json:"voidwalker"`
-	ChannelID          string        `json:"channel_id"`
-	PublishAddress     string        `json:"publish_address"`
-	ReflectorServer    string        `json:"reflector_server"`
-	LbrynetTimeout     time.Duration `json:"lbrynet_timeout"`
-	PreviousChannelIds []string      `json:"previous_channel_ids"`
+	RedirectBaseURL     string        `json:"redirect_base_url"`
+	RedirectAdvancedURL string        `json:"redirect_advanced_url"`
+	Chainquery          DbConfig      `json:"chainquery"`
+	Speech              DbConfig      `json:"speech"`
+	Voidwalker          DbConfig      `json:"voidwalker"`
+	ChannelID           string        `json:"channel_id"`
+	PublishAddress      string        `json:"publish_address"`
+	ReflectorServer     string        `json:"reflector_server"`
+	LbrynetTimeout      time.Duration `json:"lbrynet_timeout"`
+	PreviousChannelIds  []string      `json:"previous_channel_ids"`
 }
 
 var Configuration *Configs
