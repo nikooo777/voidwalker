@@ -139,7 +139,7 @@ func view(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(301, redirectBaseURL+url+resizeParams)
+	c.Redirect(301, redirectBaseURL+url)
 	return
 }
 
