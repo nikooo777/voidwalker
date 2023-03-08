@@ -10,13 +10,13 @@ import (
 
 	"github.com/lbryio/lbry.go/v2/extras/errors"
 	"github.com/lbryio/lbry.go/v2/stream"
-	"github.com/lbryio/reflector.go/peer"
+	"github.com/lbryio/reflector.go/server/peer"
 	"github.com/lbryio/reflector.go/store"
 )
 
 func DownloadBlob(hash string, save bool, blobsDir string) (*stream.Blob, error) {
 	bStore := GetBlobStore()
-	blob, err := bStore.Get(hash)
+	blob, _, err := bStore.Get(hash)
 	if err != nil {
 		err = errors.Prefix(hash, err)
 		return nil, errors.Err(err)
