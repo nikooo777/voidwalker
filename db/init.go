@@ -11,7 +11,7 @@ import (
 	"github.com/lbryio/lbry.go/v2/extras/errors"
 	migrate "github.com/rubenv/sql-migrate"
 	log "github.com/sirupsen/logrus"
-	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 // Init initializes a database connection based on the dsn provided. It also sets it as the global db connection.

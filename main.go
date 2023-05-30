@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
@@ -37,8 +36,8 @@ import (
 	"github.com/lbryio/lbry.go/v2/extras/util"
 	"github.com/lbryio/lbry.go/v2/stream"
 	"github.com/sirupsen/logrus"
-	"github.com/volatiletech/null"
-	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 var publishAddress string
@@ -292,7 +291,7 @@ func buildStream(sdBlob *stream.SDBlob, fileName string) error {
 			continue
 		}
 		hash := hex.EncodeToString(info.BlobHash)
-		blobToDecrypt, err := ioutil.ReadFile(blobsDir + hash)
+		blobToDecrypt, err := os.ReadFile(blobsDir + hash)
 		if err != nil {
 			return errors.Err(err)
 		}
@@ -334,7 +333,7 @@ func downloadStream(sdHash string, fileName string) error {
 	return buildStream(sdb, fileName)
 }
 
-//var cache map[string]PublishResponse
+// var cache map[string]PublishResponse
 var cache *sync.Map //map[string]PublishResponse
 
 func publish(c *gin.Context) {

@@ -1,8 +1,8 @@
 package compression
 
 import (
-	"io/ioutil"
 	"mime"
+	"os"
 	"path/filepath"
 
 	"github.com/lbryio/lbry.go/v2/extras/errors"
@@ -21,7 +21,7 @@ func Compress(path, fileName, mimeType, storePath string) (string, string, error
 		return "", "", AlreadyInUseErr
 	}
 	defer inUse.Store(false)
-	file, err := ioutil.ReadFile(path)
+	file, err := os.ReadFile(path)
 	if err != nil {
 		return "", "", errors.Err(err)
 	}
@@ -40,7 +40,7 @@ func Compress(path, fileName, mimeType, storePath string) (string, string, error
 			return "", "", errors.Err(err)
 		}
 		compressedPath := filepath.Join(storePath, fileName+".webp")
-		err = ioutil.WriteFile(compressedPath, webpBin, 0600)
+		err = os.WriteFile(compressedPath, webpBin, 0600)
 		if err != nil {
 			return "", "", errors.Err(err)
 		}

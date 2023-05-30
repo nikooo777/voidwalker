@@ -2,7 +2,6 @@ package blobsdownloader
 
 import (
 	"encoding/hex"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -26,7 +25,7 @@ func DownloadBlob(hash string, save bool, blobsDir string) (*stream.Blob, error)
 		if err != nil {
 			return nil, errors.Err(err)
 		}
-		err = ioutil.WriteFile(blobsDir+hash, blob, 0644)
+		err = os.WriteFile(blobsDir+hash, blob, 0644)
 		if err != nil {
 			return nil, errors.Err(err)
 		}
